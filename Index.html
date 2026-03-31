@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pro Workout App</title>
+
+<style>
+body {
+  margin:0;
+  font-family:Arial;
+  background:#0d0d0d;
+  color:white;
+}
+
+header {
+  text-align:center;
+  padding:15px;
+  font-size:22px;
+  background:#121212;
+}
+
+.container {
+  padding:15px;
+}
+
+.grid {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+
+.card {
+  background:#1c1c1c;
+  padding:15px;
+  border-radius:10px;
+  text-align:center;
+  cursor:pointer;
+}
+
+.active {
+  background:#00c853;
+}
+
+.controls {
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin:15px 0;
+}
+
+button {
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  background:#222;
+  color:white;
+  cursor:pointer;
+}
+
+button.active {
+  background:#00c853;
+}
+
+.workout {
+  background:#1a1a1a;
+  padding:15px;
+  border-radius:10px;
+  margin-top:10px;
+}
+
+input {
+  width:60px;
+  margin-left:10px;
+}
+
+.history {
+  margin-top:20px;
+  background:#141414;
+  padding:10px;
+  border-radius:10px;
+}
+</style>
+</head>
+
+<body>
+
+<header>💪 Pro Workout App</header>
+
+<div class="container">
+
+<!-- MUSCLE -->
+<div class="grid" id="muscles"></div>
+
+<!-- GOAL -->
+<div class="controls" id="goal"></div>
+
+<!-- EQUIPMENT -->
+<div class="controls" id="equipment"></div>
+
+<!-- WORKOUT -->
+<div id="workout"></div>
+
+<!-- SAVE -->
+<button onclick="saveWorkout()">💾 Save Workout</button>
+
+<!-- HISTORY -->
+<div class="history" id="history"></div>
+
+</div>
+
+<script>
+const muscles = ["chest","back","shoulders","biceps","triceps"];
+const goals = ["fatloss","muscle","strength"];
+const equipmentList = ["barbell","dumbbell","bodyweight"];
+
+/* STATE */
+let selectedMuscle=null;
+let selectedGoal="muscle";
+let selectedEquipment="barbell";
+
+/* RENDER */
+const muscleDiv=document.getElementById("muscles");
+muscles.forEach(m=>{
+  let d=document.createElement("div");
+  d.className="card";
+  d.innerText=m;
+
+  d.onclick=()=>{
+    selectedMuscle=m;
+    update();
+  };
+
+  muscleDiv.appendChild(d);
+});
+
+/* GOAL */
+const goalDiv=document.getElementById("goal");
+goals.forEach(g=>{
+  let b=document.createElement("button");
+  b.innerText=g;
+
+  b.onclick=()=>{
+    selectedGoal=g;
+    update();
+  };
+
+  goalDiv.appendChild(b);
+});
+
+/* EQUIPMENT */
+const eqDiv=document.getElementById("equipment");
+equipmentList.forEach(e=>{
+  let b=document.createElement("button");
+  b.innerText=e;
+
+  b.onclick=()=>{
+    selectedEquipment=e;
+    update();
+  };
+
+  eqDiv.appendChild(b);
+});
+
+/* GENERATOR */
+function generateWorkout() {
+  if(selectedGoal==="fatloss"){
+    return ["Circuit x4","20 reps each","Short rest"];
+  }
+  if(selectedGoal==="strength"){
+    return ["5 sets","4-6 reps","Heavy weight"];
+  }
+  return ["4 sets","8-12 reps","Moderate weight"];
+}
+
+/* UPDATE */
+function update(){
+  document.querySelectorAll(".card").forEach((c,i)=>{
+    c.classList.toggle("active", muscles[i]===selectedMuscle);
+  });
+
+  document.querySelectorAll("#goal button").forEach((b,i)=>{
+    b.classList.toggle("active", goals[i]===selectedGoal);
+  });
+
+  document.querySelectorAll("#equipment button").forEach((b,i)=>{
+    b.classList.toggle("active", equipmentList[i]===selectedEquipment);
+  });
+
+  renderWorkout();
+}
+
+/* WORKOUT UI */
+function renderWorkout(){
+  const div=document.getElementById("workout");
+
+  if(!selectedMuscle){
+    div.innerHTML="Select muscle";
+    return;
+  }
+
+  const template=generateWorkout();
+
+  div.innerHTML=`
+    <div class="workout">
+      <h2>${selectedMuscle}</h2>
+      <p>${selectedGoal} • ${selectedEquipment}</p>
+
+      ${template.map((t,i)=>`
+        <div>
+          ${t}
+          <input placeholder="kg">
+          <input placeholder="reps">
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+/* SAVE */
+function saveWorkout(){
+  const data={
+    muscle:selectedMuscle,
+    goal:selectedGoal,
+    date:new Date().toLocaleString()
+  };
+
+  let history=JSON.parse(localStorage.getItem("workouts"))||[];
+  history.push(data);
+
+  localStorage.setItem("workouts",JSON.stringify(history));
+
+  loadHistory();
+}
+
+/* LOAD HISTORY */
+function loadHistory(){
+  const div=document.getElementById("history");
+  let history=JSON.parse(localStorage.getItem("workouts"))||[];
+
+  div.innerHTML="<h3>History</h3>" +
+    history.map(h=>`
+      <p>${h.date} - ${h.muscle} (${h.goal})</p>
+    `).join("");
+}
+
+loadHistory();
+</script>
+
+</body>
+  </html>
